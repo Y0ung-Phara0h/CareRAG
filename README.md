@@ -60,7 +60,6 @@
 | [`static/`](static/) | Glassmorphic web user interface assets (HTML, CSS, JavaScript) |
 | [`USER_GUIDE.md`](USER_GUIDE.md) | Step-by-step guide for healthcare workers and clinicians |
 | [`DEVELOPER_GUIDE.md`](DEVELOPER_GUIDE.md) | Technical architecture & open-source contributor guide |
-| [`JUDGES_DEFENSE_GUIDE.md`](JUDGES_DEFENSE_GUIDE.md) | Master competition defense & file-by-file technical guide |
 
 ---
 
