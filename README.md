@@ -1,206 +1,148 @@
-# AI Clinical Decision Support Lite — RAG Starter Kit
+# 🩺 CareRAG — Production-Grade Clinical Decision Support Engine
 
-A minimal, beginner-friendly RAG (Retrieval-Augmented Generation) scaffold for the **AI Clinical Decision Support Lite Hackathon**.
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg)](https://fastapi.tiangolo.com/)
+[![ChromaDB](https://img.shields.io/badge/VectorDB-ChromaDB-purple.svg)](https://www.trychroma.com/)
+[![Google Gemini](https://img.shields.io/badge/LLM-Gemini%202.5--Flash-orange.svg)](https://ai.google.dev/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-This project implements an end-to-end clinical evidence question-answering pipeline:
-1. **Ingestion**: Parses medical guideline PDFs from `data/` and splits them into text chunks.
-2. **Embeddings & Vector Database**: Computes embeddings locally using FastEmbed (`BAAI/bge-small-en-v1.5`) and stores them in ChromaDB (100% free, runs offline, no API key needed).
-3. **Retrieval**: Searches the vector database for the most relevant guideline passages.
-4. **Generation**: Uses Google Gemini (`gemini-2.5-flash-lite` via the official `google-genai` SDK) to produce grounded, structured clinical answers with exact citations and safe refusals.
-
----
-
-## Architecture Overview
-
-```
-PDF Document (data/)
-  └── PDF Parsing (PyPDFLoader)
-      └── Chunking (RecursiveCharacterTextSplitter)
-          └── Citation Metadata (document_name, page_number, chunk_id)
-              └── Embeddings (Local FastEmbed / BAAI/bge-small-en-v1.5)
-                  └── Vector Storage (ChromaDB)
-                      └── Retrieval (similarity search)
-                          └── Context Construction
-                              └── Generation (Google Gemini / gemini-2.5-flash-lite)
-                                  └── Grounded Output (JSON Schema with Citations & Refusal)
-```
+> **CareRAG** is an advanced, production-grade Retrieval-Augmented Generation (RAG) platform tailored for clinical decision support. Built with a **Hybrid RRF Search Engine (ChromaDB + BM25)**, **Cross-Lingual Arabic/English Query Translation**, **Strict Pydantic Schema Guardrails (0% Hallucination)**, and an interactive **Glassmorphic Web Interface**.
 
 ---
 
-## Project Structure
+## 🌟 Key Highlights & Capabilities
 
-| File / Folder | Purpose |
+- **🔬 Hybrid Retrieval Engine**: Fuses dense vector embeddings (`BAAI/bge-small-en-v1.5`) with lexical search (`BM25`) using **Reciprocal Rank Fusion (RRF)**.
+- **🌍 Cross-Lingual Query Translator**: Accepts clinical queries in **Arabic** or **English**, seamlessly translating Arabic search terms to query English medical guidelines while returning grounded Arabic recommendations.
+- **🛡️ Verifiable Citations & Safe Refusal**: Guarantees zero hallucinations. If guideline context is missing, CareRAG issues a safe refusal (`confidence: "insufficient"`).
+- **🎨 Glassmorphic Web App**: Includes Light/Dark theme switching, responsive collapsible sidebar, interactive citation evidence drawer, and session thread exports (`.md` / `.json`).
+- **💾 SQLite Session Store**: Persistent conversation management with pop-up confirmation modals for session deletion.
+
+---
+
+## 🏗️ System Architecture
+
+```
+                                  [ PDF Medical Guidelines ]
+                                              │
+                                   ┌──────────┴──────────┐
+                                   ▼                     ▼
+                         [ Dense Vector Search ]  [ Lexical BM25 Search ]
+                         (BAAI/bge-small-en-v1.5)   (Rank-BM25 Tokenizer)
+                                   │                     │
+                                   └──────────┬──────────┘
+                                              ▼
+                                 [ Reciprocal Rank Fusion ]
+                                        (RRF k=60)
+                                              │
+                                              ▼
+                                 [ Grounded Gemini Engine ]
+                                  (Pydantic Schema JSON)
+                                              │
+                                              ▼
+                                 [ CareRAG Web Interface ]
+```
+
+---
+
+## 📁 Repository Map
+
+| File / Folder | Description |
 |---|---|
-| `config.py` | Central configuration (paths, chunk size, top-k, Gemini model settings) |
-| `ingest.py` | Loads PDFs from `data/`, chunks them, embeds locally, and builds ChromaDB |
-| `query.py` | Retrieval interface — queries ChromaDB and displays relevant passages (No API key needed) |
-| `generate.py` | Grounded generation module using Google Gemini (`google-genai`) |
-| `pipeline.py` | End-to-end CLI pipeline (Retrieval + Gemini Grounded Generation) |
-| `requirements.txt` | Python package dependencies |
-| `.env.example` | Template for environment variables (`GEMINI_API_KEY`, `GEMINI_MODEL`) |
-| `schema/response_schema.json` | JSON Schema enforcing structured output shape |
-| `data/` | Contains the official `WHO_Hypertension_Guideline_2021.pdf` |
-| `eval/` | Benchmark test cases for retrieval quality and refusal testing |
+| [`config.py`](config.py) | Central system configuration, model names, paths, and RRF settings |
+| [`ingest.py`](ingest.py) | PDF text loader, chunker, vector database indexing & BM25 generator |
+| [`query.py`](query.py) | Cross-lingual query translator & Hybrid RRF retrieval engine |
+| [`generate.py`](generate.py) | Grounded Gemini generation engine with structured Pydantic schema |
+| [`pipeline.py`](pipeline.py) | End-to-end CLI execution engine |
+| [`session_manager.py`](session_manager.py) | SQLite session store for history tracking and export generation |
+| [`app.py`](app.py) | FastAPI backend serving REST API endpoints and static frontend UI |
+| [`eval/`](eval/) | Evaluation suite with 20 ground-truth clinical benchmark test cases |
+| [`static/`](static/) | Glassmorphic web user interface assets (HTML, CSS, JavaScript) |
+| [`USER_GUIDE.md`](USER_GUIDE.md) | Step-by-step guide for healthcare workers and clinicians |
+| [`DEVELOPER_GUIDE.md`](DEVELOPER_GUIDE.md) | Technical architecture & open-source contributor guide |
+| [`JUDGES_DEFENSE_GUIDE.md`](JUDGES_DEFENSE_GUIDE.md) | Master competition defense & file-by-file technical guide |
 
 ---
 
-## Quick Setup Guide (Windows Command Prompt)
+## ⚡ Quick Start Guide
 
-Follow these exact steps to set up and run the project using Windows Command Prompt (`cmd.exe`).
+### 1. Prerequisites & Virtual Environment Setup
+Ensure Python 3.10+ is installed on your system.
 
-### Step 1 — Open CMD inside the project folder
-Open Command Prompt and navigate to your project directory:
-```cmd
-cd path\to\RAG_Project
-```
+```bash
+# Clone the repository
+git clone https://github.com/gheryani102/RAG.git
+cd RAG
 
-### Step 2 — Create the virtual environment
-Create a virtual environment named `ragv`:
-```cmd
-python -m venv ragv
-```
+# Create virtual environment
+python -m venv .ragve
 
-### Step 3 — Activate the virtual environment
-Activate the `ragv` environment in Windows CMD:
-```cmd
-ragv\Scripts\activate
-```
-> **Tip:** After activation, your command prompt line will start with `(ragv)`, indicating the environment is active:
-> ```cmd
-> (ragv) C:\Users\...\RAG_Project>
-> ```
+# Activate virtual environment
+# Windows CMD:
+.ragve\Scripts\activate
+# macOS/Linux:
+source .ragve/bin/activate
 
-### Step 4 — Upgrade pip
-```cmd
-python -m pip install --upgrade pip
-```
-
-### Step 5 — Install dependencies
-Install all required libraries:
-```cmd
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Step 6 — Create your `.env` file
-Copy the `.env.example` template to create your `.env` configuration file:
-```cmd
-copy .env.example .env
+### 2. Environment Configuration
+Copy `.env.example` to `.env` and add your Google Gemini API key:
+```bash
+cp .env.example .env
 ```
-
-### Step 7 — Configure your `.env` file
-Open the newly created `.env` file in Notepad or VS Code. It should contain:
+Edit `.env`:
 ```env
 EMBEDDING_PROVIDER=local
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+GEMINI_API_KEY=your_actual_gemini_api_key_here
 GEMINI_MODEL=gemini-2.5-flash-lite
 ```
 
-> **Important notes about `.env`:**
-> - Replace `YOUR_GEMINI_API_KEY_HERE` with your actual Google Gemini API key.
-> - `GEMINI_API_KEY` is **only required for the generation stage** (`pipeline.py`).
-> - Ingestion (`ingest.py`) and retrieval (`query.py`) work 100% free and locally **without needing any Gemini API key**.
-> - **Never share or commit `.env`** to GitHub or version control (it is already in `.gitignore`).
-
----
-
-## Running the Project
-
-### Step 8 — Build the vector database
-Index the bundled WHO hypertension guideline into ChromaDB:
-```cmd
+### 3. Ingest Guidelines & Build Vector Database
+Index the clinical guidelines into ChromaDB and generate the BM25 index:
+```bash
 python ingest.py
 ```
 
-**Expected successful output:**
+> [!CAUTION]
+> **Hardware & Memory Caution for Low-Spec Devices**:  
+> Running `python ingest.py` generates local dense embeddings (`FastEmbed` / `BAAI/bge-small-en-v1.5`) and builds a BM25 index in memory. If you are running on **low-spec or low-budget hardware** (< 4GB RAM or entry-level CPUs) or processing **large medical textbooks** (1,000+ pages), ingestion can cause high CPU load and memory pressure.  
+> **Recommended Solutions for Low-Spec Machines**:
+> 1. **Cloud Execution (Recommended)**: Host or run your ingestion environment on **[Lightning AI](https://lightning.ai)** (free cloud CPU/GPU Workspaces) to handle heavy document embedding without straining local hardware.
+> 2. **Batch Processing**: Split very large PDF documents into smaller sections or ingest files in smaller batches.
+> 3. **Increase Chunk Size**: Increase `CHUNK_SIZE` in `config.py` (e.g. from `400` to `600`) to decrease the total number of processed chunks.
+> 4. **Close Heavy Apps**: Close memory-intensive background applications prior to executing `python ingest.py`.
+
+### 4. Launch CareRAG Web Server
+Run the FastAPI web application server:
+```bash
+python app.py
 ```
-=== Day 1 Starter: Ingestion Pipeline ===
-
-Loading WHO_Hypertension_Guideline_2021.pdf ...
-  -> 13 pages loaded
-
-Created <N> chunks from 13 pages.
-
-Embedding <N> chunks using 'local' provider ...
-Done. Index saved to C:\...\RAG_Project\chroma_db/
-
-Next step: run  python query.py "your question here"  to test retrieval.
-```
-> **Note:** `<N>` represents the total number of text chunks created (e.g. ~28 chunks). This number will change if you modify `CHUNK_SIZE` or `CHUNK_OVERLAP` in `config.py`.
+Open your browser and navigate to **`http://127.0.0.1:8000`**.
 
 ---
 
-### Step 9 — Test retrieval (No API key needed)
-Search the vector database for top matching guideline chunks:
-```cmd
-python query.py "What is the target blood pressure for a patient with known cardiovascular disease?"
-```
+## 🧪 Running the Benchmark Evaluation
 
-**What you will see in the output:**
-- **Top retrieved chunks**: Rank order of the best matching passages.
-- **Score**: Similarity relevance score (e.g. `0.761`).
-- **Document & Page**: Source file name and exact page number (`page 9`).
-- **Chunk ID**: Unique identifier for citation tracking (`WHO_Hypertension_Guideline_2021-p9-c...`).
-- **Preview text**: Direct excerpt of the guideline text.
+Evaluate CareRAG's faithfulness, answer relevance, citation precision, and refusal behavior against 20 clinical test cases:
 
----
-
-### Step 10 — Run the full end-to-end RAG pipeline
-Retrieve evidence and generate a grounded, structured answer with Gemini:
-```cmd
-python pipeline.py "What is the target blood pressure for a patient with known cardiovascular disease?"
-```
-
-**What happens:**
-1. **Retrieval**: ChromaDB fetches relevant guideline chunks.
-2. **Context Construction**: Formats the retrieved passages with document and page metadata.
-3. **Grounded Generation**: Gemini generates a direct recommendation, quotes supporting evidence, and provides citations strictly from the retrieved text.
-
----
-
-### Step 11 — Test safe refusal (Out-of-scope question)
-Test how the pipeline handles questions not covered by the guideline (e.g. breast cancer screening):
-```cmd
-python pipeline.py "What is the recommended breast cancer screening interval?"
-```
-
-**Refusal output:**
-The system returns `confidence: "insufficient"`, refuses to guess or invent medical advice, and leaves citations empty:
-```json
-{
-  "recommendation": "I cannot answer this question because the provided guideline context covers hypertension treatment and contains no information about breast cancer screening.",
-  "evidence": "",
-  "citations": [],
-  "confidence": "insufficient"
-}
+```bash
+python eval/evaluate.py
 ```
 
 ---
 
-## How to Run the Project Next Time
+## 📡 REST API Documentation
 
-In future sessions, you do **NOT** need to recreate `ragv` or reinstall packages.
-
-Simply open CMD, navigate to the folder, and activate the virtual environment:
-```cmd
-cd path\to\RAG_Project
-ragv\Scripts\activate
-```
-
-Then run whichever script you need:
-```cmd
-python query.py "your question"
-python pipeline.py "your question"
-```
-
-When you are done working, deactivate the environment:
-```cmd
-deactivate
-```
+- `POST /api/query`: Submits a question, retrieves context, and returns a grounded response card.
+- `GET /api/sessions`: Returns list of past consultation sessions.
+- `GET /api/sessions/{session_id}`: Retrieves full chat history and citations for a specific session.
+- `DELETE /api/sessions/{session_id}`: Deletes a consultation session from the database.
+- `GET /api/sessions/{session_id}/export?format=json|markdown`: Downloads session thread as JSON or Markdown.
 
 ---
 
-## Troubleshooting
+## 📜 License & Citation
 
-- **`Vector database not found`**: Run `python ingest.py` first to generate the ChromaDB index.
-- **`GEMINI_API_KEY is missing`**: Ingestion and `query.py` run without a key. To use `pipeline.py`, add your API key to `.env`.
-- **Rebuilding the index from scratch**: Delete the `chroma_db/` folder and re-run `python ingest.py`.
+Distributed under the **MIT License**. Created by **Sa3ayda Geeks** for the AI Clinical Decision Support Competition.

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareRAG — Clinical Decision Support System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container" id="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div class="brand-badge" style="margin-bottom: 0;">
+                        <span class="brand-icon">⚕️</span>
+                        <div class="brand-text">
+                            <h2 style="font-family: var(--font-heading); font-size: 20px;">CareRAG</h2>
+                            <span class="brand-sub">Sa3ayda Geeks</span>
+                        </div>
+                    </div>
+                    <button id="btn-toggle-sidebar" class="btn-icon-sm" title="Toggle Sidebar">
+                        ☰
+                    </button>
+                </div>
+                <button id="btn-new-session" class="btn-primary-sm" data-i18n="new_consultation">+ New Consultation</button>
+            </div>
+
+            <div class="sidebar-section-title" data-i18n="past_consultations">Past Consultations</div>
+            <div id="session-list" class="session-list">
+                <!-- Dynamically populated via JS -->
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot green"></span>
+                    <span class="status-text" data-i18n="engine_active">Hybrid Engine Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="header-brand-group">
+                    <button id="btn-header-toggle-sidebar" class="btn-icon-sm" title="Toggle Sidebar">
+                        ☰
+                    </button>
+                    <div class="header-brand-badge">
+                        <span class="brand-icon" style="font-size: 22px;">⚕️</span>
+                        <div class="header-brand-text">
+                            <span class="header-brand-name">CareRAG</span>
+                            <span id="header-sub-session-title" class="header-sub-title"></span>
+                        </div>
+                    </div>
+                    <div class="session-info">
+                        <h1 id="active-session-title" data-i18n="default_title">New Clinical Consultation</h1>
+                    </div>
+                </div>
+                <div class="export-actions" style="align-items: center;">
+                    <button id="btn-lang-toggle" class="btn-outline-sm" title="Switch Language" style="display: flex; align-items: center; gap: 6px;">
+                        <span>🌐</span>
+                        <span id="lang-toggle-label">العربية</span>
+                    </button>
+                    <button id="btn-theme-toggle" class="btn-outline-sm" title="Toggle Theme" style="display: flex; align-items: center; gap: 6px;">
+                        <span id="theme-toggle-icon">☀️</span>
+                        <span id="theme-toggle-label">Light</span>
+                    </button>
+                    <button id="btn-export-md" class="btn-outline-sm" data-i18n="export_md">📄 Export MD</button>
+                    <button id="btn-export-json" class="btn-outline-sm" data-i18n="export_json">📊 Export JSON</button>
+                </div>
+            </header>
+
+            <!-- Chat Viewport -->
+            <div id="chat-viewport" class="chat-viewport">
+                <div class="welcome-hero">
+                    <div class="hero-icon">🩺</div>
+                    <h2 data-i18n="hero_title">CareRAG Medical Decision Engine</h2>
+                    <p data-i18n="hero_sub">Ask a grounded clinical question based strictly on uploaded medical guidelines and guidelines
+                        PDFs.</p>
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="input-container">
+                <form id="chat-form" class="chat-form">
+                    <textarea id="user-input"
+                        placeholder="Type a clinical question (e.g. 'What is the target blood pressure threshold for high-risk patients?')..."
+                        data-i18n-placeholder="input_placeholder"
+                        rows="2" required></textarea>
+                    <button type="submit" id="btn-send" class="btn-send">
+                        <span data-i18n="btn_send">Send Inquiry</span>
+                        <span class="send-icon">➔</span>
+                    </button>
+                </form>
+            </div>
+        </main>
+
+        <!-- Citation Slide-out Drawer -->
+        <div id="citation-drawer-overlay" class="drawer-overlay hidden"></div>
+        <aside id="citation-drawer" class="citation-drawer hidden">
+            <div class="drawer-header">
+                <h3 data-i18n="drawer_title">Citation Evidence Details</h3>
+                <button id="btn-close-drawer" class="btn-icon">✕</button>
+            </div>
+            <div class="drawer-body">
+                <div class="drawer-field">
+                    <label data-i18n="drawer_doc">Source Document:</label>
+                    <div id="drawer-doc-name" class="drawer-val highlight">--</div>
+                </div>
+                <div class="drawer-field-row">
+                    <div class="drawer-field">
+                        <label data-i18n="drawer_page">Page Number:</label>
+                        <div id="drawer-page-num" class="drawer-val">--</div>
+                    </div>
+                    <div class="drawer-field">
+                        <label data-i18n="drawer_sec">Section:</label>
+                        <div id="drawer-section" class="drawer-val">--</div>
+                    </div>
+                </div>
+                <div class="drawer-field">
+                    <label data-i18n="drawer_excerpt">Grounded Evidence Excerpt:</label>
+                    <div id="drawer-evidence-text" class="drawer-evidence-box">Select a citation chip to view exact
+                        evidence context.</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-modal-overlay" class="modal-overlay hidden">
+            <div class="modal-card">
+                <div class="modal-icon">⚠️</div>
+                <h3 data-i18n="modal_delete_title">Delete Consultation?</h3>
+                <p data-i18n="modal_delete_sub">Are you sure you want to delete this consultation? All associated messages and data will be permanently removed.</p>
+                <div class="modal-actions">
+                    <button id="btn-cancel-delete" class="btn-modal-secondary" data-i18n="modal_btn_cancel">Cancel</button>
+                    <button id="btn-confirm-delete" class="btn-modal-danger" data-i18n="modal_btn_delete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

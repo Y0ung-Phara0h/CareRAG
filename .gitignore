@@ -1,9 +1,48 @@
+# Environment Variables & Secrets (Contains sensitive API keys)
+.env
+.env.local
+*.env
+
+# Internal Agent Tooling & Specs (Hides speckit & internal workflows)
+.agents/
+.specify/
+.github/
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.pyc
-.env
+*.pyo
+*.pyd
+
+# Local Session Database & Exports
+sessions/*.db
+sessions/care_rag_sessions.db
+sessions/exports/*
+!sessions/exports/.gitkeep
+
+# Local Vector Database & Indices (Generated via `python ingest.py`)
 chroma_db/
-ragv/
+*.pkl
+
+# Virtual Environments
 .venv/
 venv/
-*.egg-info/
+ragv/
+.ragve/
+env/
+ENV/
+
+# IDE & OS Metadata
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+
+# Distribution / Packaging
+*.egg-info/
+dist/
+build/
+
+# Private Planning & Judge Defense Artifacts
+PLAN.md
+JUDGES_DEFENSE_GUIDE.md

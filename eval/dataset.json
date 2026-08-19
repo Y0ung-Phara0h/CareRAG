@@ -1,0 +1,30 @@
+[
+  {
+    "id": "eval_001",
+    "category": "supported_guideline",
+    "question": "What is the primary diagnostic criterion or blood pressure threshold for hypertension in adults?",
+    "expected_document": "guidelines.pdf",
+    "should_refuse": false
+  },
+  {
+    "id": "eval_002",
+    "category": "supported_guideline",
+    "question": "What are the key lifestyle recommendations for managing high blood pressure?",
+    "expected_document": "guidelines.pdf",
+    "should_refuse": false
+  },
+  {
+    "id": "eval_003",
+    "category": "unsupported_out_of_scope",
+    "question": "What is the exact pediatric dosage for rare genetic disorder phenylketonuria?",
+    "expected_document": null,
+    "should_refuse": true
+  },
+  {
+    "id": "eval_004",
+    "category": "unsupported_out_of_scope",
+    "question": "What are the surgical steps for a total knee arthroplasty replacement?",
+    "expected_document": null,
+    "should_refuse": true
+  }
+]
